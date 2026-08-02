@@ -1,0 +1,36 @@
+name: Aggiorna calendario gare
+
+on:
+  schedule:
+    # Ogni giorno alle 03:00 UTC (04:00/05:00 ora italiana a seconda del periodo)
+    - cron: "0 3 * * *"
+  workflow_dispatch: {}  # permette di lanciarlo anche manualmente da GitHub
+
+permissions:
+  contents: write  # necessario per poter committare il file aggiornato
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installa dipendenze
+        run: pip install -r requirements.txt
+
+      - name: Genera calendario F1
+        run: python scripts/generate_f1.py
+
+      - name: Committa il file se è cambiato
+        run: |
+          git config user.name "racing-calendar-bot"
+          git config user.email "actions@github.com"
+          git add docs/f1.ics
+          git diff --staged --quiet || git commit -m "Aggiornamento automatico calendario F1"
+          git push
